@@ -237,26 +237,38 @@ function renderResults(){
 }
 function restart(){newSession(_all);render();}
 function loadProductos(){
-  // Phase 1: fetch first 5 products for quick first render
+  // Phase 1: fetch first 5 → show one immediately, never replace it
   var cb1="preview_cb_"+Date.now();
   var s1=document.createElement("script");
-  window[cb1]=function(data){
+  window[cb1]=function(previewData){
     delete window[cb1];
-    if(!Array.isArray(data)||data.length===0){renderEmpty();return;}
-    // Show one random product from first 5 immediately
-    var preview=data[Math.floor(Math.random()*data.length)];
-    productos=[preview]; cur=0; votes=[]; exiting=false;
-    render();
-    // Phase 2: fetch all products in background
+    if(!Array.isArray(previewData)||previewData.length===0){renderEmpty();return;}
+
+    // Pick one random from preview pool — this card is LOCKED, never changes
+    var firstCard=previewData[Math.floor(Math.random()*previewData.length)];
+    sessionId="sess-"+Date.now()+"-"+Math.random().toString(36).substr(2,5);
+    productos=[firstCard]; cur=0; votes=[]; exiting=false;
+    render(); // user sees first photo immediately
+
+    // Phase 2: fetch ALL products, build final deck excluding firstCard
     var cb2="all_cb_"+Date.now();
     var s2=document.createElement("script");
     window[cb2]=function(allData){
       delete window[cb2];
       if(!Array.isArray(allData)||allData.length===0)return;
       _all=allData;
-      // Only reset if user hasn't voted yet
-      if(votes.length===0){ newSession(_all); render(); }
-      else { /* user already started, keep going with full pool for next session */ }
+
+      // Remove firstCard from pool to avoid repeat
+      var pool=allData.filter(function(p){
+        return p.image_url!==firstCard.image_url;
+      });
+
+      // Pick MAX-1 more products randomly
+      var rest=pickRandom(pool, MAX-1);
+
+      // Final deck = firstCard (already shown) + rest
+      productos=[firstCard].concat(rest);
+      // Don't re-render — user keeps seeing firstCard, rest are queued
     };
     s2.src=API+"?action=productos&callback="+cb2;
     document.head.appendChild(s2);
