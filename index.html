@@ -109,7 +109,7 @@ body{background:#F2F0ED;display:flex;flex-direction:column;align-items:center;fo
 <div class="frame"><div id="app"></div></div>
 <script>
 var API = "https://script.google.com/macros/s/AKfycbycoJi6NHF5r-0h2bGxaXk-r3UAQlo8l84mXjdHZivtowTLu1BuCcfu74TvCCVO5aY1/exec";
-var MAX = 10;
+var MAX = 10; // se sobreescribe con el valor del Sheet
 var LOGO = '<span class="logo"><span class="logo-white">Privalia</span> <span class="logo-red">Tinder</span></span>';
 var BTN = "border:none;color:#fff;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:0;outline:none;-webkit-tap-highlight-color:transparent;";
 var EDAD_BTN = "padding:14px 18px;background:#888888;border:none;color:#ffffff;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:0;outline:none;white-space:nowrap;-webkit-tap-highlight-color:transparent;";
@@ -224,13 +224,25 @@ function renderResults(){
   setTimeout(function(){var b=document.getElementById("sb");if(b)b.style.display="none";},5000);
 }
 function restart(){newSession(_all);render();}
-function init(){
-  renderLoading();
+function loadProductos(){
   var cbName="load_cb_"+Date.now();
   var s=document.createElement("script");
   window[cbName]=function(data){delete window[cbName];if(!Array.isArray(data)||data.length===0){renderEmpty();return;}_all=data;newSession(_all);render();};
   s.onerror=function(){renderEmpty();};
   s.src=API+"?action=productos&callback="+cbName;
+  document.head.appendChild(s);
+}
+function init(){
+  renderLoading();
+  var cbName="cfg_cb_"+Date.now();
+  var s=document.createElement("script");
+  window[cbName]=function(cfg){
+    delete window[cbName];
+    if(cfg && cfg.productos_max) MAX=parseInt(cfg.productos_max)||10;
+    loadProductos();
+  };
+  s.onerror=function(){loadProductos();}; // si falla config, usa MAX=10
+  s.src=API+"?action=config&callback="+cbName;
   document.head.appendChild(s);
 }
 document.addEventListener("keydown",function(e){if(e.key==="ArrowLeft")vote("dislike");if(e.key==="ArrowRight")vote("like");});
