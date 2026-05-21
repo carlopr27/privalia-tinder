@@ -36,8 +36,8 @@ body{background:#F2F0ED;display:flex;flex-direction:column;align-items:center;fo
 
 /* Image takes almost all the card */
 .card-img{width:100%;flex:1;min-height:0;background:#ECEAE6;display:flex;align-items:center;justify-content:center;font-size:60px;overflow:hidden;}
-.card-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease;cursor:zoom-in;}
-.card-img:hover img{transform:scale(1.16);}
+.card-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease;}
+@media(hover:hover){.card-img{cursor:zoom-in;}.card-img:hover img{transform:scale(1.16);}}
 
 /* Stamps */
 .stamp-row{display:flex;justify-content:space-between;align-items:center;padding:4px 10px;background:white;border-top:1px solid #F0EDE8;flex-shrink:0;}
@@ -103,6 +103,27 @@ body{background:#F2F0ED;display:flex;flex-direction:column;align-items:center;fo
 .ri-name{font-size:11px;font-weight:700;color:#111;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .vote-chip{font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;flex-shrink:0;}
 .vote-chip.q{background:#E8F5E9;color:#2E7D32;}.vote-chip.p{background:#FDEAED;color:#CC0022;}
+
+/* Swipe tutorial overlay */
+.swipe-tutorial{
+  position:absolute;inset:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;pointer-events:none;
+  animation:tutfade 2.5s ease forwards;
+}
+@keyframes tutfade{
+  0%{opacity:0;} 20%{opacity:1;} 70%{opacity:1;} 100%{opacity:0;}
+}
+.tut-arrow{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.tut-left .tut-icon{font-size:28px;animation:nudgeleft 1s ease infinite;}
+.tut-right .tut-icon{font-size:28px;animation:nudgeright 1s ease infinite;}
+@keyframes nudgeleft{0%,100%{transform:translateX(0);}50%{transform:translateX(-8px);}}
+@keyframes nudgeright{0%,100%{transform:translateX(0);}50%{transform:translateX(8px);}}
+.tut-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:white;text-shadow:0 1px 3px rgba(0,0,0,.5);}
+.tut-left .tut-label{color:#f87171;}
+.tut-right .tut-label{color:#86efac;}
 </style>
 </head>
 <body>
@@ -148,7 +169,7 @@ function stackHTML(){
     var cls=active?"product-card active":"product-card behind-"+behind;
     var id=active?'id="ac"':" ";
     h+='<div class="'+cls+'" '+id+'>';
-    h+='<div class="card-img">'+(p.image_url?'<img src="'+p.image_url+'" alt="">':'📦')+'</div>';
+    h+='<div class="card-img">'+(p.image_url?'<img src="'+p.image_url+'" alt="">':'📦')+(active&&cur===0?'<div class="swipe-tutorial"><div class="tut-arrow tut-left"><div class="tut-icon">👈</div><div class="tut-label">Paso</div></div><div class="tut-arrow tut-right"><div class="tut-icon">👉</div><div class="tut-label">Lo quiero</div></div></div>':'')+'</div>';
     h+='<div class="stamp-row"><span class="stamp stamp-paso">Paso</span><span class="stamp stamp-like">Lo quiero</span></div>';
     h+='<div class="card-info"><div class="c-meta">'+p.marca+' · '+p.categoria+'</div><div class="c-name">'+p.producto+'</div></div>';
     h+='</div>';
@@ -228,7 +249,19 @@ function restart(){newSession(_all);render();}
 function loadProductos(){
   var cbName="load_cb_"+Date.now();
   var s=document.createElement("script");
-  window[cbName]=function(data){delete window[cbName];if(!Array.isArray(data)||data.length===0){renderEmpty();return;}_all=data;newSession(_all);render();};
+  window[cbName]=function(data){
+    delete window[cbName];
+    if(!Array.isArray(data)||data.length===0){renderEmpty();return;}
+    _all=data;
+    newSession(_all);
+    // Render first card immediately
+    render();
+    // Preload remaining images in background
+    for(var i=1;i<Math.min(productos.length,4);i++){
+      var img=new Image();
+      img.src=productos[i].image_url;
+    }
+  };
   s.onerror=function(){renderEmpty();};
   s.src=API+"?action=productos&callback="+cbName;
   document.head.appendChild(s);
