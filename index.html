@@ -15,7 +15,7 @@ body{background:#F2F0ED;display:flex;flex-direction:column;align-items:center;fo
 .topbar{width:100%;background:#111;padding:6px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .logo{font-size:16px;font-weight:900;letter-spacing:-0.5px;}
 .logo-white{color:#fff;}.logo-red{color:#CC0022;}
-.prog-pill{font-size:9px;font-weight:700;color:#666;letter-spacing:.06em;}
+
 
 /* Progress bar */
 .prog-bar{width:100%;height:2px;background:#DDD9D2;flex-shrink:0;}
@@ -140,7 +140,7 @@ body{background:#F2F0ED;display:flex;flex-direction:column;align-items:center;fo
 <script>
 var API = "https://script.google.com/macros/s/AKfycbycoJi6NHF5r-0h2bGxaXk-r3UAQlo8l84mXjdHZivtowTLu1BuCcfu74TvCCVO5aY1/exec";
 var MAX = 10; // se sobreescribe con el valor del Sheet
-var LOGO = '<span class="logo"><span class="logo-white">Privalia</span> <span class="logo-red">Tinder</span></span>';
+var LOGO = '<span class="logo"><span class="logo-white">TH</span> <span class="logo-red">Selection</span></span>';
 var BTN = "border:none;color:#fff;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:0;outline:none;-webkit-tap-highlight-color:transparent;";
 var EDAD_BTN = "padding:14px 18px;background:#888888;border:none;color:#ffffff;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:0;outline:none;white-space:nowrap;-webkit-tap-highlight-color:transparent;";
 
@@ -200,7 +200,7 @@ function renderEmpty(){
 function render(){
   var pct=Math.round((cur/productos.length)*100);
   document.getElementById("app").innerHTML=
-    '<div class="topbar">'+LOGO+'<span class="prog-pill">'+(cur+1)+' / '+productos.length+'</span></div>'+
+    '<div class="topbar">'+LOGO+'</div>'+
     '<div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%"></div></div>'+
     '<div class="card-wrap"><div class="card-stage" id="stage">'+stackHTML()+'</div></div>'+
     '<div class="dot-row">'+dotsHTML()+'</div>'+
@@ -237,45 +237,16 @@ function renderResults(){
 }
 function restart(){newSession(_all);render();}
 function loadProductos(){
-  // Phase 1: fetch first 5 → show one immediately, never replace it
-  var cb1="preview_cb_"+Date.now();
-  var s1=document.createElement("script");
-  window[cb1]=function(previewData){
-    delete window[cb1];
-    if(!Array.isArray(previewData)||previewData.length===0){renderEmpty();return;}
-
-    // Pick one random from preview pool — this card is LOCKED, never changes
-    var firstCard=previewData[Math.floor(Math.random()*previewData.length)];
-    sessionId="sess-"+Date.now()+"-"+Math.random().toString(36).substr(2,5);
-    productos=[firstCard]; cur=0; votes=[]; exiting=false;
-    render(); // user sees first photo immediately
-
-    // Phase 2: fetch ALL products, build final deck excluding firstCard
-    var cb2="all_cb_"+Date.now();
-    var s2=document.createElement("script");
-    window[cb2]=function(allData){
-      delete window[cb2];
-      if(!Array.isArray(allData)||allData.length===0)return;
-      _all=allData;
-
-      // Remove firstCard from pool to avoid repeat
-      var pool=allData.filter(function(p){
-        return p.image_url!==firstCard.image_url;
-      });
-
-      // Pick MAX-1 more products randomly
-      var rest=pickRandom(pool, MAX-1);
-
-      // Final deck = firstCard (already shown) + rest
-      productos=[firstCard].concat(rest);
-      // Don't re-render — user keeps seeing firstCard, rest are queued
-    };
-    s2.src=API+"?action=productos&callback="+cb2;
-    document.head.appendChild(s2);
-  };
-  s1.onerror=function(){renderEmpty();};
-  s1.src=API+"?action=preview&callback="+cb1;
-  document.head.appendChild(s1);
+  // Load products.json from GitHub (fast, <300ms)
+  fetch("./products.json?v="+Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(!Array.isArray(data)||data.length===0){renderEmpty();return;}
+      _all=data;
+      newSession(_all);
+      render();
+    })
+    .catch(function(){ renderEmpty(); });
 }
 function init(){
   renderLoading();
