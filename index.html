@@ -110,6 +110,7 @@ body{background:#F2F0ED;display:flex;flex-direction:column;align-items:center;fo
   display:flex;align-items:center;justify-content:space-between;
   padding:0 20px;pointer-events:none;
   animation:tutfade 2.5s ease forwards;
+  position:absolute;
 }
 @keyframes tutfade{
   0%{opacity:0;} 20%{opacity:1;} 70%{opacity:1;} 100%{opacity:0;}
@@ -124,6 +125,14 @@ body{background:#F2F0ED;display:flex;flex-direction:column;align-items:center;fo
 .tut-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:white;text-shadow:0 1px 3px rgba(0,0,0,.5);}
 .tut-left .tut-label{color:#f87171;}
 .tut-right .tut-label{color:#86efac;}
+.tut-center{position:absolute;left:50%;transform:translateX(-50%);text-align:center;}
+.tut-center-text{font-size:13px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:white;text-shadow:0 1px 4px rgba(0,0,0,.6);white-space:nowrap;}
+
+.thanks-screen{width:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;gap:0;}
+.thanks-emoji{font-size:64px;margin-bottom:20px;}
+.thanks-title{font-size:30px;font-weight:900;color:#111;text-transform:uppercase;letter-spacing:-1px;line-height:1.1;margin-bottom:12px;}
+.thanks-title span{color:#CC0022;}
+.thanks-sub{font-size:14px;color:#999;line-height:1.7;}
 </style>
 </head>
 <body>
@@ -169,7 +178,7 @@ function stackHTML(){
     var cls=active?"product-card active":"product-card behind-"+behind;
     var id=active?'id="ac"':" ";
     h+='<div class="'+cls+'" '+id+'>';
-    h+='<div class="card-img">'+(p.image_url?'<img src="'+p.image_url+'" alt="">':'📦')+(active&&cur===0?'<div class="swipe-tutorial"><div class="tut-arrow tut-left"><div class="tut-icon">👈</div><div class="tut-label">Paso</div></div><div class="tut-arrow tut-right"><div class="tut-icon">👉</div><div class="tut-label">Lo quiero</div></div></div>':'')+'</div>';
+    h+='<div class="card-img">'+(p.image_url?'<img src="'+p.image_url+'" alt="">':'📦')+(active&&cur===0?'<div class="swipe-tutorial"><div class="tut-arrow tut-left"><div class="tut-icon">👈</div><div class="tut-label">Paso</div></div><div class="tut-center"><div class="tut-center-text">Swipe y decide</div></div><div class="tut-arrow tut-right"><div class="tut-icon">👉</div><div class="tut-label">Lo quiero</div></div></div>':'')+'</div>';
     h+='<div class="stamp-row"><span class="stamp stamp-paso">Paso</span><span class="stamp stamp-like">Lo quiero</span></div>';
     h+='<div class="card-info"><div class="c-meta">'+p.marca+' · '+p.categoria+'</div><div class="c-name">'+p.producto+'</div></div>';
     h+='</div>';
@@ -218,53 +227,43 @@ function renderPremio(){
   setTimeout(function(){var i=document.getElementById("edad-input");if(i)i.focus();},100);
 }
 function renderResults(){
-  var liked=votes.filter(function(v){return v.v==="like";}),noped=votes.filter(function(v){return v.v==="dislike";});
-  var rate=Math.round((liked.length/votes.length)*100);
-  var listHTML=votes.map(function(v){
-    return '<div class="res-item">'+
-      '<div class="res-thumb">'+(v.p.image_url?'<img src="'+v.p.image_url+'" alt="">':'📦')+'</div>'+
-      '<div class="res-info"><div class="ri-meta">'+v.p.marca+' · '+v.p.categoria+'</div><div class="ri-name">'+v.p.producto+'</div></div>'+
-      '<div class="vote-chip '+(v.v==="like"?"q":"p")+'">'+(v.v==="like"?"Lo quiero":"Paso")+'</div>'+
-    '</div>';
-  }).join("");
   document.getElementById("app").innerHTML=
-    '<div class="res-frame">'+
-      '<div class="res-topbar"><span class="res-back" onclick="restart()">←</span><span class="res-title">Resultados</span>'+LOGO+'</div>'+
-      '<div class="res-body">'+
-        '<div class="res-hl">Tu selección</div>'+
-        '<div class="res-sub">10 productos · '+edadCapturada+' años ✅<span class="saving-badge" id="sb">· guardando...</span></div>'+
-        '<div class="stats-grid">'+
-          '<div class="stat-box"><span class="stat-n r">'+liked.length+'</span><span class="stat-t">Lo quiero</span></div>'+
-          '<div class="stat-box"><span class="stat-n">'+noped.length+'</span><span class="stat-t">Paso</span></div>'+
-          '<div class="stat-box"><span class="stat-n">'+rate+'%</span><span class="stat-t">Aprobación</span></div>'+
-        '</div>'+
-        '<div class="sep">Detalle por producto</div>'+
-        '<div class="res-list">'+listHTML+'</div>'+
-        '<button style="'+BTN+'width:100%;padding:14px;background:#111;margin-bottom:16px;" onclick="restart()">↩ Nueva sesión</button>'+
-      '</div>'+
+    '<div class="topbar">'+LOGO+'</div>'+
+    '<div class="thanks-screen">'+
+      '<div class="thanks-emoji">🎉</div>'+
+      '<div class="thanks-title">¡Gracias por<br>tu <span>selección</span>!</div>'+
+      '<div class="thanks-sub">Tu opinión es muy valiosa para nosotros.<br>Ya puedes cerrar esta ventana.</div>'+
     '</div>';
-  setTimeout(function(){var b=document.getElementById("sb");if(b)b.style.display="none";},5000);
 }
 function restart(){newSession(_all);render();}
 function loadProductos(){
-  var cbName="load_cb_"+Date.now();
-  var s=document.createElement("script");
-  window[cbName]=function(data){
-    delete window[cbName];
+  // Phase 1: fetch first 5 products for quick first render
+  var cb1="preview_cb_"+Date.now();
+  var s1=document.createElement("script");
+  window[cb1]=function(data){
+    delete window[cb1];
     if(!Array.isArray(data)||data.length===0){renderEmpty();return;}
-    _all=data;
-    newSession(_all);
-    // Render first card immediately
+    // Show one random product from first 5 immediately
+    var preview=data[Math.floor(Math.random()*data.length)];
+    productos=[preview]; cur=0; votes=[]; exiting=false;
     render();
-    // Preload remaining images in background
-    for(var i=1;i<Math.min(productos.length,4);i++){
-      var img=new Image();
-      img.src=productos[i].image_url;
-    }
+    // Phase 2: fetch all products in background
+    var cb2="all_cb_"+Date.now();
+    var s2=document.createElement("script");
+    window[cb2]=function(allData){
+      delete window[cb2];
+      if(!Array.isArray(allData)||allData.length===0)return;
+      _all=allData;
+      // Only reset if user hasn't voted yet
+      if(votes.length===0){ newSession(_all); render(); }
+      else { /* user already started, keep going with full pool for next session */ }
+    };
+    s2.src=API+"?action=productos&callback="+cb2;
+    document.head.appendChild(s2);
   };
-  s.onerror=function(){renderEmpty();};
-  s.src=API+"?action=productos&callback="+cbName;
-  document.head.appendChild(s);
+  s1.onerror=function(){renderEmpty();};
+  s1.src=API+"?action=preview&callback="+cb1;
+  document.head.appendChild(s1);
 }
 function init(){
   renderLoading();
