@@ -1,2 +1,2 @@
 # privalia-tinder
-rototipo de validación de productos
+prototipo de validación de productos
