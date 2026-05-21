@@ -9,7 +9,7 @@
 html,body{height:100%;width:100%;-webkit-text-size-adjust:100%;}
 body{background:#F2F0ED;display:flex;flex-direction:column;align-items:center;font-family:Arial,sans-serif;overflow:hidden;}
 
-.frame{width:100%;max-width:480px;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+.frame{width:100%;max-width:480px;height:100vh;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;}
 
 /* Topbar — thin as possible */
 .topbar{width:100%;background:#111;padding:6px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
@@ -22,8 +22,8 @@ body{background:#F2F0ED;display:flex;flex-direction:column;align-items:center;fo
 .prog-fill{height:100%;background:#CC0022;transition:width .4s ease;}
 
 /* Card takes all remaining space */
-.card-wrap{width:100%;padding:4px 10px 0;flex:1;min-height:0;display:flex;flex-direction:column;}
-.card-stage{position:relative;width:100%;flex:1;min-height:300px;}
+.card-wrap{width:100%;padding:4px 10px 0;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
+.card-stage{position:relative;width:100%;height:calc(100vh - 130px);}
 
 .product-card{position:absolute;inset:0;background:white;overflow:hidden;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .28s ease;will-change:transform;display:flex;flex-direction:column;}
 .product-card.behind-1{transform:scale(.96) translateY(6px);z-index:1;}
