@@ -162,7 +162,7 @@ function dotsHTML(){
   }).join("");
 }
 function renderLoading(){
-  document.getElementById("app").innerHTML='<div class="topbar">'+LOGO+'</div><div class="state-screen"><div class="spinner"></div><div class="state-msg">Cargando productos</div><div class="state-sub">Seleccionando 10 al azar...</div></div>';
+  document.getElementById("app").innerHTML='<div class="topbar">'+LOGO+'</div><div class="state-screen"><div class="spinner"></div><div class="state-msg">Cargando productos</div><div class="state-sub">Seleccionando al azar...</div></div>';
 }
 function renderEmpty(){
   document.getElementById("app").innerHTML='<div class="topbar">'+LOGO+'</div><div class="state-screen"><div style="font-size:40px">📋</div><div class="state-msg">Sin productos</div><div class="state-sub">Agrega productos en tu Google Sheet.</div></div>';
@@ -179,6 +179,7 @@ function render(){
       '<button id="btn-quiero" style="'+BTN+'flex:2;padding:13px 0;background:#CC0022;" onmouseenter="hoverQuiero(true)" onmouseleave="hoverQuiero(false)" onclick="vote(\'like\')">♡ Lo quiero</button>'+
     '</div>'+
     '<div class="hint">← paso · lo quiero →</div>';
+  setTimeout(attachSwipe, 50);
 }
 function renderPremio(){
   document.getElementById("app").innerHTML=
@@ -245,6 +246,68 @@ function init(){
   s.src=API+"?action=config&callback="+cbName;
   document.head.appendChild(s);
 }
+
+// ── SWIPE TÁCTIL ─────────────────────────────────────────────
+var touchStartX=0, touchStartY=0, touchCurrentX=0, isDragging=false;
+var SWIPE_THRESHOLD=80; // px para confirmar swipe
+
+function getActiveCard(){ return document.getElementById("ac"); }
+
+function onTouchStart(e){
+  if(exiting||cur>=productos.length)return;
+  var t=e.touches[0];
+  touchStartX=t.clientX; touchStartY=t.clientY;
+  touchCurrentX=t.clientX;
+  isDragging=true;
+}
+
+function onTouchMove(e){
+  if(!isDragging)return;
+  var t=e.touches[0];
+  touchCurrentX=t.clientX;
+  var dx=touchCurrentX-touchStartX;
+  var dy=t.clientY-touchStartY;
+  if(Math.abs(dx)<Math.abs(dy))return; // scroll vertical, ignorar
+  e.preventDefault();
+  var card=getActiveCard();
+  var stage=document.getElementById("stage");
+  if(!card)return;
+  var rotate=dx/20;
+  card.style.transform="translateX("+dx+"px) rotate("+rotate+"deg)";
+  card.style.transition="none";
+  // Mostrar stamp según dirección
+  if(stage){
+    if(dx>30) stage.className="card-stage show-like";
+    else if(dx<-30) stage.className="card-stage show-paso";
+    else stage.className="card-stage";
+  }
+}
+
+function onTouchEnd(e){
+  if(!isDragging)return;
+  isDragging=false;
+  var dx=touchCurrentX-touchStartX;
+  var card=getActiveCard();
+  var stage=document.getElementById("stage");
+  if(!card){return;}
+  card.style.transition="";
+  if(stage) stage.className="card-stage";
+  if(dx>SWIPE_THRESHOLD){ vote("like"); }
+  else if(dx<-SWIPE_THRESHOLD){ vote("dislike"); }
+  else {
+    // Snap back
+    card.style.transform="";
+  }
+}
+
+function attachSwipe(){
+  var stage=document.getElementById("stage");
+  if(!stage)return;
+  stage.addEventListener("touchstart", onTouchStart, {passive:true});
+  stage.addEventListener("touchmove",  onTouchMove,  {passive:false});
+  stage.addEventListener("touchend",   onTouchEnd,   {passive:true});
+}
+
 document.addEventListener("keydown",function(e){if(e.key==="ArrowLeft")vote("dislike");if(e.key==="ArrowRight")vote("like");});
 init();
 </script>
