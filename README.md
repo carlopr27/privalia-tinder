@@ -1,2 +1,2 @@
-# privalia-tinder
+# TH-tinder
 prototipo de validación de productos
