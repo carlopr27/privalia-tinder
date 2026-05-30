@@ -71,17 +71,22 @@ body{background:#F2F0ED;display:flex;flex-direction:column;align-items:center;fo
 .state-msg{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#999;text-align:center;}
 .state-sub{font-size:11px;color:#BBB;text-align:center;line-height:1.6;}
 
-/* Premio */
-.premio-screen{width:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;}
-.premio-emoji{font-size:48px;margin-bottom:12px;}
-.premio-title{font-size:26px;font-weight:900;color:#111;text-transform:uppercase;letter-spacing:-1px;line-height:1.1;margin-bottom:8px;}
+/* Resumen + Edad */
+.premio-screen{width:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;gap:0;}
+.resumen-box{width:100%;background:#111;border-radius:12px;padding:20px 16px;margin-bottom:24px;}
+.resumen-num{font-size:48px;font-weight:900;color:#fff;line-height:1;letter-spacing:-2px;}
+.resumen-num span{color:#CC0022;}
+.resumen-label{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-top:4px;}
+.resumen-bar{width:100%;height:6px;background:#333;border-radius:3px;margin-top:14px;overflow:hidden;}
+.resumen-bar-fill{height:100%;background:#CC0022;border-radius:3px;transition:width .6s ease;}
+.premio-title{font-size:22px;font-weight:900;color:#111;text-transform:uppercase;letter-spacing:-0.5px;line-height:1.2;margin-bottom:6px;}
 .premio-title span{color:#CC0022;}
-.premio-sub{font-size:13px;color:#999;line-height:1.6;margin-bottom:22px;}
+.premio-sub{font-size:13px;color:#999;line-height:1.5;margin-bottom:18px;}
 .edad-wrap{width:100%;display:flex;gap:8px;}
 .edad-input{flex:1;padding:14px;border:1.5px solid #CCC;background:white;font-size:20px;font-weight:700;color:#111;text-align:center;outline:none;border-radius:0;-moz-appearance:textfield;}
 .edad-input::-webkit-outer-spin-button,.edad-input::-webkit-inner-spin-button{-webkit-appearance:none;}
 .edad-input:focus{border-color:#111;}
-.edad-note{font-size:10px;color:#CCC;margin-top:8px;letter-spacing:.04em;}
+.edad-note{font-size:10px;color:#CC0022;margin-top:8px;letter-spacing:.04em;font-weight:700;}
 
 /* Results */
 .res-frame{width:100%;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
@@ -217,19 +222,28 @@ function render(){
   setTimeout(attachSwipe, 50);
 }
 function renderPremio(){
+  var liked=votes.filter(function(v){return v.v==="like";}).length;
+  var pct=MAX>0?Math.round((liked/MAX)*100):0;
   document.getElementById("app").innerHTML=
     '<div class="topbar">'+LOGO+'</div>'+
     '<div class="premio-screen">'+
-      '<div class="premio-emoji">🎁</div>'+
-      '<div class="premio-title">¿Quieres saber<br>tu <span>premio</span>?</div>'+
-      '<div class="premio-sub">Solo dinos tu edad<br>y te lo revelamos al instante.</div>'+
+      '<div class="resumen-box">'+
+        '<div class="resumen-num"><span>'+liked+'</span> de '+MAX+'</div>'+
+        '<div class="resumen-label">productos te gustaron</div>'+
+        '<div class="resumen-bar"><div class="resumen-bar-fill" id="rbar" style="width:0%"></div></div>'+
+      '</div>'+
+      '<div class="premio-title">Una última<br><span>pregunta</span></div>'+
+      '<div class="premio-sub">Tu edad nos ayuda a entender<br>mejor tu perfil de estilo.</div>'+
       '<div class="edad-wrap">'+
         '<input id="edad-input" class="edad-input" type="number" min="10" max="100" placeholder="Tu edad" onkeydown="if(event.key===\'Enter\')submitEdad()"/>'+
-        '<button style="'+EDAD_BTN+'" onmouseenter="this.style.background=\'#666666\'" onmouseleave="this.style.background=\'#888888\'" onclick="submitEdad()">Ver premio →</button>'+
+        '<button style="'+EDAD_BTN+'" onmouseenter="this.style.background=\'#666666\'" onmouseleave="this.style.background=\'#888888\'" onclick="submitEdad()">Ver resultados →</button>'+
       '</div>'+
-      '<div class="edad-note">Tu información es privada y segura 🔒</div>'+
+      '<div class="edad-note">* Campo obligatorio</div>'+
     '</div>';
-  setTimeout(function(){var i=document.getElementById("edad-input");if(i)i.focus();},100);
+  setTimeout(function(){
+    var i=document.getElementById("edad-input");if(i)i.focus();
+    var b=document.getElementById("rbar");if(b)b.style.width=pct+"%";
+  },100);
 }
 function renderResults(){
   document.getElementById("app").innerHTML=
