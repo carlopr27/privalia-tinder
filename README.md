@@ -1,2 +1,2 @@
-# TH-Playeras y Tops
+# Selector
 prototipo de validación de productos
