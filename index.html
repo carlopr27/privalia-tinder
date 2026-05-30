@@ -151,7 +151,18 @@ var EDAD_BTN = "padding:14px 18px;background:#888888;border:none;color:#ffffff;f
 var productos=[], cur=0, votes=[], exiting=false, sessionId="", edadCapturada=null, _all=[];
 
 function pickRandom(arr,n){return[].concat(arr).sort(function(){return Math.random()-.5;}).slice(0,Math.min(n,arr.length));}
-function newSession(all){productos=pickRandom(all,MAX);cur=0;votes=[];exiting=false;edadCapturada=null;sessionId="sess-"+Date.now()+"-"+Math.random().toString(36).substr(2,5);}
+function newSession(all){
+  // Carta 1: siempre un random de los primeros 6 productos
+  var featured=all.slice(0,Math.min(6,all.length));
+  var first=featured[Math.floor(Math.random()*featured.length)];
+  // Pool restante: todos excepto el que ya salió primero
+  var rest=all.filter(function(p){return p!==first;});
+  // Shuffle del resto y toma MAX-1
+  var remaining=pickRandom(rest,MAX-1);
+  // Combinar: primer producto fijo + resto aleatorio
+  productos=[first].concat(remaining);
+  cur=0;votes=[];exiting=false;edadCapturada=null;sessionId="sess-"+Date.now()+"-"+Math.random().toString(36).substr(2,5);
+}
 function hoverPaso(on){var b=document.getElementById("btn-paso");if(b)b.style.background=on?"#333":"#111";tilt(on?"dislike":null);}
 function hoverQuiero(on){var b=document.getElementById("btn-quiero");if(b)b.style.background=on?"#9E0B1A":"#CC0022";tilt(on?"like":null);}
 function tilt(d){var c=document.getElementById("ac"),s=document.getElementById("stage");if(!c||exiting)return;c.className="product-card active"+(d?" tilt-"+(d==="like"?"r":"l"):"");if(s)s.className="card-stage"+(d?" show-"+(d==="like"?"like":"paso"):"");}
